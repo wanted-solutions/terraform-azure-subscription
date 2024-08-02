@@ -1,54 +1,87 @@
-// Define the module input metadata variable
-variable "metadata" {
-  description = "Module metadata object to give user possibility to override default module values."
-  type = object({
-    resource_timeouts        = optional(map(map(string)), {})
-    validator_error_messages = optional(map(string), {})
-    validator_expressions    = optional(map(string), {})
-  })
-  default = {}
+variable "subscription_name" {
+  description = "The name of the subscription."
+  type        = string
 
-  validation {
-    condition = alltrue(
-      flatten([
-        for value in var.metadata.resource_timeouts : [
-          for timeout in value : timeout != null
-          ? can(
-            regex(
-              local.definitions.validator_expressions["timeout_value"],
-              timeout
-            )
-          )
-          : true
-        ]
-      ])
-    )
-    error_message = lookup(
-      local.definitions.validator_error_messages,
-      "timeout_value",
-      local.definitions.validator_error_messages["default"]
-    )
-  }
+}
 
-  validation {
-    condition = alltrue(
-      flatten([
-        for value in var.metadata.resource_timeouts : [
-          for key, timeout in value : timeout != null
-          ? can(
-            regex(
-              local.definitions.validator_expressions["timeout_key"],
-              key
-            )
-          )
-          : true
-        ]
-      ])
-    )
-    error_message = lookup(
-      local.definitions.validator_error_messages,
-      "timeout_key",
-      local.definitions.validator_error_messages["default"]
-    )
-  }
+variable "subscription_id" {
+  description = "The ID of the subscription."
+  type        = string
+  default     = ""
+}
+
+variable "alias" {
+  description = "The alias of the subscription."
+  type        = string
+  default     = ""
+}
+
+variable "workload" {
+  description = "The workload of the subscription."
+  type        = string
+  default     = "Production"
+}
+
+variable "management_group_id" {
+  description = "The ID of the management group to associate with the subscription."
+  type        = string
+  default     = ""
+}
+
+variable "billing_account_name" {
+  description = "The name of the billing account to associate with the subscription."
+  type        = string
+}
+
+variable "billing_account_scope" {
+  description = "The scope of the billing account to associate with the subscription."
+}
+
+variable "enrollment_account_name" {
+  description = "Name of the EA enrollment account."
+  default     = ""
+}
+
+variable "billing_profile_name" {
+  description = "Name of the MCA billing profile."
+  default     = ""
+}
+
+variable "invoice_section_name" {
+  description = "Name of the MCA invoice section."
+  default     = ""
+}
+
+variable "customer_name" {
+  description = "Name of the MPA customer."
+  default     = ""
+}
+
+variable "budgets" {
+  description = "List of budgets to be assigned under subscription group."
+  type = list(object({
+    name       = string
+    amount     = number
+    time_grain = string
+    start_date = string
+    end_date   = string
+    filter = object({
+      dimension = list(object({
+        name   = string
+        values = list(string)
+      }))
+      tag = list(object({
+        name   = string
+        values = list(string)
+      }))
+    })
+    notifications = list(object({
+      enabled        = bool
+      threshold      = number
+      operator       = string
+      threshold_type = string
+      contact_emails = list(string)
+    }))
+  }))
+  default = []
 }
